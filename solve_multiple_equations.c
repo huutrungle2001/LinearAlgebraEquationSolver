@@ -1,6 +1,11 @@
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
+
+// So ky tu ben trai dau phay duoc hien thi
+const int INT_PART = 4;
+
+
 // Giai he phuong trinh dai so tuyen tinh Ax = b
 
 struct Matrix {
@@ -20,125 +25,369 @@ void printMatrix(struct Matrix matrix, int num_decimal) {
     for (int i = 0; i < matrix.row; i++) {
         printf("\t\t");
         for (int j = 0; j < matrix.col; j++) {
-            printf("%.*f ", num_decimal, matrix.data[i][j]);
+            printf("%*.*f ", num_decimal + INT_PART, num_decimal, matrix.data[i][j]);
         }
         printf("\n");
     }
     printf("\n");
 }
 
-// In ra ma tran suy rong
+// In ra ma tran bo sung
 void printMatrix2(struct Matrix matrix, int num_decimal) {
     for (int i = 0; i < matrix.row; i++) {
         printf("\t\t");
-        for (int j = 0; j < matrix.col-1; j++) {
-            printf("%.*f ", num_decimal, matrix.data[i][j]);
+        for (int j = 0; j < matrix.col - 1; j++) {
+            printf("%*.*f ", num_decimal + INT_PART, num_decimal, matrix.data[i][j]);
         }
-        printf("| %.*f\n", num_decimal, matrix.data[i][matrix.col-1]);
+        printf("| %.*f\n", num_decimal, matrix.data[i][matrix.col - 1]);
     }
 }
 
-// Ma tran bac thang rut gon thu duoc tu phep khu Gauss
-struct Matrix duaVeMaTranBacThang(struct Matrix A1, int num_decimal) {
-    // Chuyen doi ma tran suy rong A1 ve dang rut gon bac thang
-    struct Matrix mat_ans = A1;
-    int r = A1.row;
-    int c = A1.col;
-    for (int i = 0; i < r-1; i++) {
-        printf("Ta chuan hoa cot %d: \n", i+1);
-        printf("\tTa kiem tra A1[%d][%d]?\n", i+1, i+1);
-        if( mat_ans.data[i][i] == 0 ){
-            int check = 1;
-            printf("\tDo A1[%d][%d] = 0 nen ta di tim hang i>%d ma co A1[i][%d] != 0.\n", i+1, i+1, i+1, i+1);
-            for(int j = i+1; j < r; j++){
-                if( mat_ans.data[j][i] != 0 ){
-                    check = 0;
-                    printf("Do A1[%d][%d] != 0 nen ta doi hai hang %d va %d cho nhau.\n", j+1, i+1, i+1, j+1);
-                    for(int k = 0; k < c; k++){
-                        swap(&mat_ans.data[i][k], &mat_ans.data[j][k]);
-                    }
-                    printMatrix2(mat_ans, num_decimal);
-                    break;
-                }
+// In ra man hinh dinh thuc
+void printMatrix3(struct Matrix matrix, int num_decimal, double multiples){
+    for (int i = 0; i < matrix.row; i++) {
+        printf("\t\t");
+        if( i == (matrix.row+1)/2 && multiples != 1){
+            printf("%*.*f * ", num_decimal + INT_PART, num_decimal, multiples);
+        }else{
+            printf("       ");
+            for(int j = 0; j < num_decimal; j++){
+                printf(" ");
             }
-            if( check ){
-                printf("\tKhong co hang i>%d nao ma A1[i][%d] != 0 nen tat ca phan tu cot %d da duoc chuan hoa.\n", i+1, i+1, i+1);
+        }
+        printf("| ");
+        for (int j = 0; j < matrix.col; j++) {
+            printf("%*.*f ", num_decimal + INT_PART, num_decimal, matrix.data[i][j]);
+        }
+        printf("|\n");
+    }
+}
+
+
+int tinhHang(struct Matrix A) {
+    int r = A.row;
+    int c = A.col;
+    int rank = 0;
+    for (int i = 0; i < r; i++) {
+        int check = 0;
+        for (int j = 0; j < c; j++) {
+            if (A.data[i][j] != 0) {
+                check = 1;
                 break;
             }
         }
-        if( mat_ans.data[i][i] != 1){
-            printf("\tDo A[%d][%d] != 1 nen ta tim hang i>%d ma co A1[i][%d] = 1 de giai don gian hon.\n", i+1, i+1, i+1, i+1);
-            int check = 1;
-            for(int j = i+1; j < r; j++){
-                if( mat_ans.data[j][i] == 1 ){
-                    check = 0;
-                    printf("\tDo A[%d][%d] = 1 nen ta doi hai hang %d va %d cho nhau.\n", j+1, i+1, i+1, j+1);
-                    for(int k = 0; k < c; k++){
-                        swap(&mat_ans.data[i][k], &mat_ans.data[j][k]);
-                    }
-                    printMatrix2(mat_ans, num_decimal);
-                    break;
-                }
-            }
-            if( check ){
-                printf("\tKhong co hang i>%d nao co A1[i][%d] = 1 nen ta tiep tuc chuan hoa nhu binh thuong.\n", i+1, i+1, i+1);
-            }
-        }
-        int check = 0;  // Kiem tra xem cot i+1 da duoc chuan hoa chua
-        for (int j = i + 1; j < r; j++) {
-            if( mat_ans.data[j][i] != 0 ){
-                check = 1;
-            }
-            float t = mat_ans.data[j][i] / mat_ans.data[i][i];
-            for (int k = 0; k < c; k++) {
-                mat_ans.data[j][k] -= t * mat_ans.data[i][k];
-            }
-        }
-        if( check ){
-            printf("\tTa thuc hien chuan hoa cot %d.\n", i+1, i+1, i+1);
-            printf("\tMa tran A1 sau khi chuan hoa cot %d:\n", i + 1);
-            printMatrix2(mat_ans, num_decimal);
-        }else{
-            printf("\tCot %d da duoc chuan hoa.\n", i+1);
-        }
+        rank += check;
     }
-    return mat_ans;
+    return rank;
 }
 
-void tinhDinhThuc(struct Matrix A, struct Matrix A_bac_thang, int num_decimal){
-    // Tinh dinh thuc
-    printf("Tinh dinh thuc ma tran A:\n");
-    printf("\tdet(A) = det(A_bac_thang) = A_bac_thang[1][1]*...*A_bac_thang[%d][%d] = ", A.row, A.row);
-    double det_A = 1.0;
-    for(int i = 0; i < A.row; i++){
-        det_A *= A_bac_thang.data[i][i];
+
+void tinhDinhThucBangGauss(struct Matrix A, int num_decimal){
+    printf("+-------------------------------------------------------+\n");
+    printf("| TINH DINH THUC MA TRAN VUONG A BANG PHUONG PHAP GAUSS |\n");
+    printf("+-------------------------------------------------------+\n\n");
+    double multiples = 1;
+    double detA = 1;
+    printf("Ta co: \ndet(A) =  \n");
+    printMatrix3(A, num_decimal, multiples);
+    struct Matrix A1;
+    A1.row = A.row;
+    A1.col = A.col;
+    A1.data = (double **)malloc(sizeof(double *) * A.row);
+    for (int i = 0; i < A.row; i++) {
+        A1.data[i] = (double *)malloc(sizeof(double) * A.col);
     }
-    printf("%.*f\n\n", num_decimal, det_A);
+    for (int i = 0; i < A.row; i++) {
+        for (int j = 0; j < A.col; j++) {
+            A1.data[i][j] = A.data[i][j];
+        }
+    }
+    int r = A.row;
+    int c = A.col;
+    for (int i = 0; i < r-1 ; i++) {
+        int check = 0;
+        for(int j = i; j < r; j++){
+            if(A1.data[j][i] != 0){
+                check = 1;
+                if( j != i ){
+                    printf("\t=\t(H%d <-> H%d)  \n", i + 1, j + 1);
+                    for(int k = 0; k < c; k++){
+                        swap(&A1.data[i][k], &A1.data[j][k]);
+                    }
+                    multiples *= -1;
+                    printMatrix3(A1, num_decimal, multiples);
+                }
+                break;
+            }
+        }
+        if( !check ){
+            detA *= 0;
+            continue;
+        }
+        
+        detA *= A1.data[i][i];
+        int kt = 0;
+        for(int j = i+1; j < r; j++){
+            if( A1.data[j][i] != 0 ){
+                kt = 1;
+                double t = A1.data[j][i] / A1.data[i][i];
+                printf("(H%d <-> H%d - %.*f*H%d)  ", j+1, j+1, num_decimal, t, i+1);
+                for(int k = 0; k < c; k++){
+                    A1.data[j][k] -= t * A1.data[i][k];
+                }
+            }
+        }
+        if( kt ){
+            printf("\n\t=\t\n");
+            printMatrix3(A1, num_decimal, multiples);
+        }
+    }
+    detA *= A1.data[r-1][r-1];
+    printf("\t=\t%.*f", num_decimal, A1.data[0][0]);
+    for(int i = 1; i < r; i++){
+        printf(" * %.*f", num_decimal, A1.data[i][i]);
+    }
+    if( detA == 0 ){
+        detA = abs(detA);
+    }
+    printf("\n\t=\t%.*f\n", num_decimal, detA);
+    printf("\nVay det(A) = %.*f\n\n", num_decimal, detA);
 }
 
 // Giai he phuong trinh bang phuong phap Gauss
-void giaiHePhuongTrinh(struct Matrix A, struct Matrix b, struct Matrix A_bac_thang, int num_decimal){
-    // Chuyen doi ma tran A ve dang rut gon bac thang
-    tinhDinhThuc(A, A_bac_thang, num_decimal);
-    // Giai he phuong trinh
-    struct Matrix x = A_bac_thang;
-    for(int i = 0; i < A.row; i++){
-        x.data[i][A.col] = b.data[i][0];
-    }
-    for(int i = A.row-1; i >= 0; i--){
-        for(int j = i+1; j < A.col; j++){
-            x.data[i][0] -= x.data[i][j] * x.data[j][0];
+void giaiHePhuongTrinh(struct Matrix M, int num_decimal) {
+    // Giai he phuong trinh tam giac tren
+    int r = M.row;
+    int c = M.col;
+    double *x = (double *)malloc(sizeof(double) * (c-1));
+    
+    x[c - 2] = M.data[r - 1][c-1] / M.data[r - 1][c-2];
+    for (int i = r - 2; i >= 0; i--) {
+        double sum = 0;
+        for (int j = i + 1; j < c-1; j++) {
+            sum += M.data[i][j] * x[j];
         }
-        x.data[i][0] /= x.data[i][i];
+        x[i] = (M.data[i][c-1] - sum) / M.data[i][i];
     }
-    printf("\nX = \n");
-    printMatrix(x, num_decimal);
+    for(int i = 0; i < c-1; i++) {
+        printf("\t\tX[%d] = %*.*f\n", i + 1, num_decimal + INT_PART, num_decimal, x[i]);
+    }
+}
+void giaiHePhuongTrinhBangGauss(struct Matrix A, struct Matrix b, int num_decimal){
+    printf("+---------------------------------------------+\n");
+    printf("| GIAI HE PHUONG TRINH BANG PHUONG PHAP GAUSS |\n");
+    printf("+---------------------------------------------+\n\n");
+    printf("Truoc het ta bien doi ma tran bo sung M ve dang bac thang:\n");
+    struct Matrix M;
+    int r = A.row;
+    int c = A.col;
+    M.row = r, M.col = c+1;
+    M.data = (double **)malloc(sizeof(double *) * M.row);
+    for(int i = 0; i < M.row; i++){
+        M.data[i] = (double *)malloc(sizeof(double) * M.col);
+    }
+    for(int i = 0; i < r; i++){
+        for(int j = 0; j < c; j++){
+            M.data[i][j] = A.data[i][j];
+        }
+        M.data[i][c] = b.data[i][0];
+    }
+    printf("Ta co ma tran bo sung: \nM = (A | b) = \n");
+    printMatrix2(M, num_decimal);
+    for (int i = 0; i < r-1 ; i++) {
+        int check = 0;
+        for(int j = i; j < r; j++){
+            if(M.data[j][i] != 0){
+                check = 1;
+                if( j != i ){
+                    printf("(H%d <-> H%d)  ", i + 1, j + 1);
+                    for(int k = 0; k <= c; k++){
+                        swap(&M.data[i][k], &M.data[j][k]);
+                    }
+                    printf("\n\t===>\t\n");
+                    printMatrix2(M, num_decimal);
+                }
+                break;
+            }
+        }
+        if( !check ){
+            continue;
+        }
+        int kt = 0;
+        for(int j = i+1; j < r; j++){
+            if( M.data[j][i] != 0 ){
+                kt = 1;
+                double t = M.data[j][i] / M.data[i][i];
+                printf("(H%d <-> H%d - %.*f*H%d)  ", j+1, j+1, num_decimal, t, i+1);
+                for(int k = 0; k <= c; k++){
+                    M.data[j][k] -= t * M.data[i][k];
+                }
+            }
+        }
+        if( kt ){
+            printf("\n\t===>\t\n");
+            printMatrix2(M, num_decimal);
+        }
+    }
+
+    printf("\nLuc nay he phuong trinh tro thanh: \n");
+    for (int i = 0; i < M.row; i++) {
+        for (int j = 0; j <= i; j++) {
+            printf("\t");
+        }
+        printf("%*.*f*x[%d]", num_decimal + INT_PART, num_decimal, M.data[i][i], i + 1);
+        for (int j = i + 1; j < M.col - 1; j++) {
+            if (M.data[i][j] != 0) {
+                printf(" + %*.*f*x[%d]", num_decimal + INT_PART, num_decimal, M.data[i][j], j + 1);
+            } else {
+                printf("\t");
+            }
+        }
+        printf(" = %*.*f\n", num_decimal + INT_PART, num_decimal, M.data[i][M.col - 1]);
+    }
+
+    struct Matrix A_bac_thang;
+    A_bac_thang.row = A.row;
+    A_bac_thang.col = A.col;
+    A_bac_thang.data = (double **)malloc(A_bac_thang.row * sizeof(double *));
+    for (int i = 0; i < A_bac_thang.row; i++) {
+        A_bac_thang.data[i] = (double *)malloc(A_bac_thang.col * sizeof(double));
+    }
+    for (int i = 0; i < A_bac_thang.row; i++) {
+        for (int j = 0; j < A_bac_thang.col; j++) {
+            A_bac_thang.data[i][j] = M.data[i][j];
+        }
+    }
+    printf("\n");
+    // Tinh hang cua ma tran A va ma tran bo sung M
+    int rank_A, rank_M;
+    rank_A = tinhHang(A_bac_thang);
+    rank_M = tinhHang(M);
+    printf("Ta co hang cua ma tran A la: r(A) = %d\n", rank_A);
+    printf("Ta co hang cua ma tran bo sung M la: r(M) = %d\n", rank_M);
+    printf("\n");
+    printf("Ta kiem tra bang Dinh ly ve nghiem cua HPTTT: \n");
+    if( rank_A == rank_M ){
+        if( rank_A == A.row ){
+            printf("\tDo r(A) = r(M) = so an, nen he phuong trinh co nghiem duy nhat.\n");
+            printf("\tTa giai lan luot cac phuong trinh tu duoi len ta duoc: \n");
+            giaiHePhuongTrinh(M, num_decimal);
+        }else{
+            printf("\tHe phuong trinh co vo so nghiem:\n");
+        }
+    }else{
+        printf("\tHe phuong trinh vo nghiem:\n");
+    }
+    printf("\n");
 }
 
+void giaiHePhuongTrinhBangGaussJoocdan(struct Matrix A, struct Matrix b, int num_decimal){
+    printf("+-----------------------------------------------------+\n");
+    printf("| GIAI HE PHUONG TRINH BANG PHUONG PHAP GAUSS-JOOCDAN |\n");
+    printf("+-----------------------------------------------------+\n\n");
+    printf("Truoc het ta bien doi ma tran bo sung M ve dang chinh tac:\n");
+    struct Matrix M;
+    int r = A.row;
+    int c = A.col;
+    M.row = r, M.col = c+1;
+    M.data = (double **)malloc(sizeof(double *) * M.row);
+    for(int i = 0; i < M.row; i++){
+        M.data[i] = (double *)malloc(sizeof(double) * M.col);
+    }
+    for(int i = 0; i < r; i++){
+        for(int j = 0; j < c; j++){
+            M.data[i][j] = A.data[i][j];
+        }
+        M.data[i][c] = b.data[i][0];
+    }
+    printf("Ta co ma tran bo sung: \nM = (A | b) = \n");
+    printMatrix2(M, num_decimal);
+    for (int i = 0; i < r ; i++) {
+        int check = 0;
+        for(int j = i; j < r; j++){
+            if(M.data[j][i] != 0){
+                check = 1;
+                if( j != i ){
+                    printf("(H%d <-> H%d)  ", i + 1, j + 1);
+                    for(int k = 0; k <= c; k++){
+                        swap(&M.data[i][k], &M.data[j][k]);
+                    }
+                    printf("\n\t===>\t\n");
+                    printMatrix2(M, num_decimal);
+                }
+                break;
+            }
+        }
+        if( !check ){
+            continue;
+        }
+        int kt = 0;
+        if( M.data[i][i] != 1){
+            kt = 1;
+            double t = M.data[i][i];
+            printf("(H%d <-> (1/%.*f)*H%d)  ", i + 1, num_decimal, t, i + 1);
+            for(int k = 0; k <= c; k++){
+                M.data[i][k] /= t;
+            }
+        }
+        for(int j = i+1; j < r; j++){
+            if( M.data[j][i] != 0 ){
+                kt = 1;
+                double t = M.data[j][i] / M.data[i][i];
+                printf("(H%d <-> H%d - %.*f*H%d)  ", j+1, j+1, num_decimal, t, i+1);
+                for(int k = 0; k <= c; k++){
+                    M.data[j][k] -= t * M.data[i][k];
+                }
+            }
+        }
+        if( kt ){
+            printf("\n\t===>\t\n");
+            printMatrix2(M, num_decimal);
+        }
+    }
+    for(int i = 0; i < r; i++){
+        if( M.data[i][i] == 0 ){
+            printf("\n\tHe phuong trinh vo nghiem hoac vo so nghiem.\n");
+            return;
+        }
+    }
+    for (int i = r-1; i >= 0 ; i--) {
+        int check = 0;
+        int kt = 0;
+        for(int j = i-1; j >= 0; j--){
+            if( M.data[j][i] != 0 ){
+                kt = 1;
+                double t = M.data[j][i] / M.data[i][i];
+                printf("(H%d <-> H%d - %.*f*H%d)  ", j+1, j+1, num_decimal, t, i+1);
+                for(int k = 0; k <= c; k++){
+                    M.data[j][k] -= t * M.data[i][k];
+                }
+            }
+        }
+        if( kt ){
+            printf("\n\t===>\t\n");
+            printMatrix2(M, num_decimal);
+        }
+    }
+    printf("Khi do nghiem duy nhat cua he phuong trinh la: \n");
+    for(int i = 0; i < c-1; i++) {
+        printf("\t\tX[%d] = %*.*f\n", i + 1, num_decimal + INT_PART, num_decimal, x[i]);
+    }
+    printf("\n");
+
+}
+
+
+
 int main() {
-    printf("+----------------------------------------------------------------------------------------------------------+\n");
-    printf("|CHUONG TRINH GIAI HE PHUONG TRINH DAI SO TUYEN TINH Ax = B bang phuong phap Gauss, Gauss-Joicdan, Solepski|\n");
-    printf("+----------------------------------------------------------------------------------------------------------+\n\n");
+    printf("+------------------------------------------------------------------------------------------------------------+\n");
+    printf("| CHUONG TRINH GIAI HE PHUONG TRINH DAI SO TUYEN TINH Ax = B bang phuong phap Gauss, Gauss-Joocdan, Solepski |\n");
+    printf("+------------------------------------------------------------------------------------------------------------+\n\n");
+    
+    printf("+-------------------------------------------+\n");
+    printf("| NHAP SO CHU SO THAP PHAN SE DUOC HIEN THI |\n");
+    printf("+-------------------------------------------+\n\n");
+    // Nhap vao so chu so thap phan se duoc hien thi
     int num_decimal;
     printf("Nhap so chu so thap phan se duoc hien thi: ");
     scanf("%d", &num_decimal);
@@ -146,28 +395,34 @@ int main() {
         printf("Nhap sai! Vui long nhap lai: ");
         scanf("%d", &num_decimal);
     }
+
+    printf("+-----------------------------------+\n");
+    printf("| NHAP VAO A VA b DUOI DANG MA TRAN |\n");
+    printf("+-----------------------------------+\n\n");
     // Nhap vao ma tran A
     struct Matrix A;
     {
         printf("Nhap vao kich co cua ma tran vuong A: ");
         scanf("%d", &A.row);
-        while( A.row <= 0 ){
+        while (A.row <= 0) {
             printf("Nhap sai! Vui long nhap lai: ");
             scanf("%d", &A.row);
         }
         A.col = A.row;
-        
+
         A.data = (double **)malloc(A.row * sizeof(double *));
         for (int i = 0; i < A.row; i++) {
             A.data[i] = (double *)malloc(A.col * sizeof(double));
         }
         printf("Nhap vao ma tran vuong A kich co %dx%d: \n", A.row, A.col);
         for (int i = 0; i < A.row; i++) {
-            printf("\t");
             for (int j = 0; j < A.col; j++) {
+                printf("\ta[%d][%d] = ", i + 1, j + 1);
                 scanf("%lf", &A.data[i][j]);
             }
         }
+        printf("Ma tran A la: \n");
+        printMatrix(A, num_decimal);
     }
     // Nhap vao ma tran b
     struct Matrix b;
@@ -178,68 +433,71 @@ int main() {
         for (int i = 0; i < b.row; i++) {
             b.data[i] = (double *)malloc(b.col * sizeof(double));
         }
-        printf("Nhap vao ma tran b kich co %dx%d: \n", b.row, b.col);
+        printf("Nhap vao vecto cot b kich co %dx%d: \n", b.row, b.col);
         for (int i = 0; i < b.row; i++) {
-            printf("\t");
-            for (int j = 0; j < b.col; j++) {
-                scanf("%lf", &b.data[i][j]);
-            }
+            printf("\tb[%d] = ", i + 1);
+            scanf("%lf", &b.data[i][0]);
         }
+        printf("Vector cot b la: \n");
+        printMatrix(b, num_decimal);
     }
 
+    printf("+-------------------------+\n");
+    printf("| He phuong trinh co dang |\n");
+    printf("+-------------------------+\n\n");
+    for (int i = 0; i < A.row; i++) {
+        printf("\t%*.*f*x[%d]", num_decimal + INT_PART, num_decimal, A.data[i][0], 1);
+        for (int j = 1; j < A.col; j++) {
+            printf(" + %*.*f*x[%d] ", num_decimal + INT_PART, num_decimal, A.data[i][j], j + 1);
+        }
+        printf("= %*.*f\n", num_decimal + INT_PART, num_decimal, b.data[i][0]);
+    }
+    printf("\n");
     
-    struct Matrix A1;
-    {
-        A1.row = A.row;
-        A1.col = A.col+1;
-        A1.data = (double **)malloc(A1.row * sizeof(double *));
-        for (int i = 0; i < A1.row; i++) {
-            A1.data[i] = (double *)malloc(A1.col * sizeof(double));
-        }
-        for (int i = 0; i < A1.row; i++) {
-            for (int j = 0; j < A1.col-1; j++) {
-                A1.data[i][j] = A.data[i][j];
-            }
-            A1.data[i][A1.col-1] = b.data[i][0];
-        }
-        printf("Ma tran suy rong:\n\t A1 = (A|b) = \n");
-        printMatrix2(A1, num_decimal);
-        printf("Ta dua ma tran suy rong A1 ve dang ma tran bac thang: \n");
-        struct Matrix A_bac_thang = duaVeMaTranBacThang(A1, num_decimal);
-        printf("Vay dang bac thang cua ma tran suy rong la: \n");
-        printMatrix2(A_bac_thang, num_decimal);
-    }
+    printf("+------------------------------------------------------------+\n");
+    printf("| Xin moi lua chon chuong trinh                              |\n");
+    printf("+------------------------------------------------------------+\n");
+    printf("| 1. Tinh dinh thuc ma tran A bang phuong phap Gauss         |\n");
+    printf("+------------------------------------------------------------+\n");
+    printf("| 2. Giai phuong trinh Ax = b bang phuong phap Gauss         |\n");
+    printf("+------------------------------------------------------------+\n");
+    printf("| 3. Giai phuong trinh Ax = b bang phuong phap Gauss-Joocdan |\n");
+    printf("+------------------------------------------------------------+\n");
+    printf("| 4. Giai phuong trinh Ax = b bang phuong phap Solepski      |\n");
+    printf("+------------------------------------------------------------+\n\n");
 
-    // Tinh dinh thuc ma tran A bang phuong phap Gauss:
-    printf("+------------------------------------------------------+\n");
-    printf("|TINH DINH THUC MA TRAN VUONG A BANG PHUONG PHAP GAUSS:|\n");
-    printf("+------------------------------------------------------+\n\n");
-    // Dua A ve ma tran bac thang
-    struct Matrix A_bac_thang;
-    {
-        A_bac_thang.row = A.row;
-        A_bac_thang.col = A.col;
-        A_bac_thang.data = (double **)malloc(A_bac_thang.row * sizeof(double *));
-        for (int i = 0; i < A_bac_thang.row; i++) {
-            A_bac_thang.data[i] = (double *)malloc(A_bac_thang.col * sizeof(double));
+    int choice;
+    char decision;
+    do{
+        printf("Nhap lua chon: ");
+        scanf("%d", &choice);
+        while (choice < 1 || choice > 4){
+            printf("Nhap sai! Vui long nhap lai: ");
+            scanf("%d", &choice);
         }
-        for(int i = 0; i < A_bac_thang.row; i++){
-            for(int j = 0; j < A_bac_thang.col; j++){
-                A_bac_thang.data[i][j] = A1.data[i][j];
-            }
+        switch (choice) {
+            case 1:
+                tinhDinhThucBangGauss(A, num_decimal);
+                break;
+            case 2:
+                giaiHePhuongTrinhBangGauss(A, b, num_decimal);
+                break;
+            case 3:
+                giaiHePhuongTrinhBangGaussJoocdan(A, b, num_decimal);
+                break;
+            case 4:
+                //giaiHePhuongTrinh(A, num_decimal);
+                break;
         }
-    }
-    printf("Dang bac thang cua ma tran A la:\nA_bac_thang = \n");
-    printMatrix(A_bac_thang, num_decimal);
-    tinhDinhThuc(A, A_bac_thang, num_decimal);
+        printf("Ban co muon tiep tuc khong? (y/n): ");
+        fflush(stdin);
+        scanf("%c", &decision);
+        while(decision != 'y' && decision != 'n'){
+            printf("Nhap sai! Vui long nhap lai: ");
+            fflush(stdin);
+            scanf("%c", &decision);
+        }
+    }while(decision == 'y');
     
-    return 0;
-    // Giai he phuong trinh dai so bang phuong phap Gauss:
-    printf("+---------------------------------------------------+\n");
-    printf("|GIAI HE PHUONG TRINH DAI SO BANG PHUONG PHAP GAUSS:|\n");
-    printf("+---------------------------------------------------+\n\n");
-    printf("Ta su dung ma tran bac thang cua A o cau b de giai he phuong trinh dai so:\nA_bac_thang = \n");
-    printMatrix(A_bac_thang, num_decimal);
-
     return 0;
 }
