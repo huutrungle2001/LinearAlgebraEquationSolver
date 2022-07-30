@@ -493,23 +493,23 @@ int check_symmetric(Matrix A, FILE *fp) {
     }
 }
 
-// Giai he phuong trinh bang phuong phap Solepski
-void giaiHePhuongTrinhBangSolepski(Matrix A, Matrix b, int num_decimal, FILE *fp) {
+// Giai he phuong trinh bang phuong phap Choleski
+void giaiHePhuongTrinhBangCholeski(Matrix A, Matrix b, int num_decimal, FILE *fp) {
     // A = L.L^T
     // L.L^T.x = b
     // Giai he phuong trinh
     // L^t.x = y
     // L.y = b
     printf("+-----------------------------------------------------+\n");
-    printf("| GIAI HE PHUONG TRINH BANG PHUONG PHAP SOLEPSKI      |\n");
+    printf("| GIAI HE PHUONG TRINH BANG PHUONG PHAP Choleski      |\n");
     printf("+-----------------------------------------------------+\n\n");
-    printf("De A co khai trien Solepski: A = L.L^T, voi T la ma tran tam giac duoi thi A phai la ma tran duong-doi xung.\n");
+    printf("De A co khai trien Choleski: A = L.L^T, voi T la ma tran tam giac duoi thi A phai la ma tran duong-doi xung.\n");
     fprintf(fp, "+-----------------------------------------------------+\n");
-    fprintf(fp, "| GIAI HE PHUONG TRINH BANG PHUONG PHAP SOLEPSKI      |\n");
+    fprintf(fp, "| GIAI HE PHUONG TRINH BANG PHUONG PHAP Choleski      |\n");
     fprintf(fp, "+-----------------------------------------------------+\n\n");
-    fprintf(fp, "De A co khai trien Solepski: A = L.L^T, voi T la ma tran tam giac duoi thi A phai la ma tran duong-doi xung.\n");
+    fprintf(fp, "De A co khai trien Choleski: A = L.L^T, voi T la ma tran tam giac duoi thi A phai la ma tran duong-doi xung.\n");
 
-    // Truoc het de dua A ve dang khai tren Solepski
+    // Truoc het de dua A ve dang khai tren Choleski
     // Ta kiem tra A co phai la ma tran duong-doi xung hay khong.
     // Dong thoi tim ma tran tam giac duoi L trong khai trien (neu co)
 
@@ -563,8 +563,8 @@ void giaiHePhuongTrinhBangSolepski(Matrix A, Matrix b, int num_decimal, FILE *fp
             upper_triangular.data[i][j] = lower_triangular.data[j][i];
         }
     }
-    printf("Ta co khai trien Solepski cua A: A = L.L^T = \n");
-    fprintf(fp, "Ta co khai trien Solepski cua A: A = L.L^T = \n");
+    printf("Ta co khai trien Choleski cua A: A = L.L^T = \n");
+    fprintf(fp, "Ta co khai trien Choleski cua A: A = L.L^T = \n");
     printMatrix(lower_triangular, num_decimal, fp);
     printf("\t\t*\n");
     printMatrix(upper_triangular, num_decimal, fp);
@@ -612,10 +612,10 @@ int main() {
     FILE *fp;
     fp = fopen("output.txt", "w");
     printf("+------------------------------------------------------------------------------------------------------------+\n");
-    printf("| CHUONG TRINH GIAI HE PHUONG TRINH DAI SO TUYEN TINH Ax = B bang phuong phap Gauss, Gauss-Joocdan, Solepski |\n");
+    printf("| CHUONG TRINH GIAI HE PHUONG TRINH DAI SO TUYEN TINH Ax = B bang phuong phap Gauss, Gauss-Joocdan, Choleski |\n");
     printf("+------------------------------------------------------------------------------------------------------------+\n\n");
     fprintf(fp, "+------------------------------------------------------------------------------------------------------------+\n");
-    fprintf(fp, "| CHUONG TRINH GIAI HE PHUONG TRINH DAI SO TUYEN TINH Ax = B bang phuong phap Gauss, Gauss-Joocdan, Solepski |\n");
+    fprintf(fp, "| CHUONG TRINH GIAI HE PHUONG TRINH DAI SO TUYEN TINH Ax = B bang phuong phap Gauss, Gauss-Joocdan, Choleski |\n");
     fprintf(fp, "+------------------------------------------------------------------------------------------------------------+\n\n");
 
     printf("+-------------------------------------------+\n");
@@ -718,7 +718,7 @@ int main() {
         printf("+------------------------------------------------------------+\n");
         printf("| 3. Giai phuong trinh Ax = b bang phuong phap Gauss-Joocdan |\n");
         printf("+------------------------------------------------------------+\n");
-        printf("| 4. Giai phuong trinh Ax = b bang phuong phap Solepski      |\n");
+        printf("| 4. Giai phuong trinh Ax = b bang phuong phap Choleski      |\n");
         printf("+------------------------------------------------------------+\n\n");
         fprintf(fp,"+------------------------------------------------------------+\n");
         fprintf(fp, "| Xin moi lua chon chuong trinh                              |\n");
@@ -729,7 +729,7 @@ int main() {
         fprintf(fp,"+------------------------------------------------------------+\n");
         fprintf(fp,"| 3. Giai phuong trinh Ax = b bang phuong phap Gauss-Joocdan |\n");
         fprintf(fp,"+------------------------------------------------------------+\n");
-        fprintf(fp,"| 4. Giai phuong trinh Ax = b bang phuong phap Solepski      |\n");
+        fprintf(fp,"| 4. Giai phuong trinh Ax = b bang phuong phap Choleski      |\n");
         fprintf(fp,"+------------------------------------------------------------+\n\n");
         printf("Nhap lua chon: ");
         scanf("%d", &choice);
@@ -748,7 +748,7 @@ int main() {
                 giaiHePhuongTrinhBangGaussJoocdan(A, b, num_decimal, fp);
                 break;
             case 4:
-                giaiHePhuongTrinhBangSolepski(A, b, num_decimal, fp);
+                giaiHePhuongTrinhBangCholeski(A, b, num_decimal, fp);
                 break;
         }
         printf("Ban co muon tiep tuc khong? (y/n): ");
