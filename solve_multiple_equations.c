@@ -158,7 +158,7 @@ void tinhDinhThucBangGauss(Matrix A, int num_decimal, FILE *fp) {
             if (A1.data[j][i] != 0) {
                 kt = 1;
                 double t = A1.data[j][i] / A1.data[i][i];
-                printf("(H%d <-> H%d - %.*f*H%d)  ", j + 1, j + 1, num_decimal, t, i + 1);
+                printf("(H%d <-> H%d - (%.*f*H%d))  ", j + 1, j + 1, num_decimal, t, i + 1);
                 fprintf(fp, "(H%d <-> H%d - %.*f*H%d)  ", j + 1, j + 1, num_decimal, t, i + 1);
                 for (int k = 0; k < c; k++) {
                     A1.data[j][k] -= t * A1.data[i][k];
@@ -172,11 +172,21 @@ void tinhDinhThucBangGauss(Matrix A, int num_decimal, FILE *fp) {
         }
     }
     detA *= A1.data[r - 1][r - 1];
-    printf("\t=\t%.*f", num_decimal, A1.data[0][0] + 0.0);
-    fprintf(fp, "\t=\t%.*f", num_decimal, A1.data[0][0] + 0.0);
-    for (int i = 1; i < r; i++) {
-        printf(" * %.*f", num_decimal, A1.data[i][i] + 0.0);
-        fprintf(fp, " * %.*f", num_decimal, A1.data[i][i] + 0.0);
+    detA *= multiples;
+    if(multiples != 1){
+        printf("\t=\t%.*f", num_decimal, multiples);
+        fprintf(fp, "\t=\t%.*f", num_decimal, multiples);
+        for (int i = 0; i < r; i++) {
+            printf(" * %.*f", num_decimal, A1.data[i][i] + 0.0);
+            fprintf(fp, " * %.*f", num_decimal, A1.data[i][i] + 0.0);
+        }
+    }else{
+        printf("\t=\t%.*f", num_decimal, A1.data[0][0] + 0.0);
+        fprintf(fp, "\t=\t%.*f", num_decimal, A1.data[0][0] + 0.0);
+        for (int i = 1; i < r; i++) {
+            printf(" * %.*f", num_decimal, A1.data[i][i] + 0.0);
+            fprintf(fp, " * %.*f", num_decimal, A1.data[i][i] + 0.0);
+        }
     }
     printf("\n\t=\t%.*f\n", num_decimal, detA + 0.0);
     fprintf(fp, "\n\t=\t%.*f\n", num_decimal, detA + 0.0);
@@ -234,25 +244,36 @@ void giaiHePhuongTrinhBangGauss(Matrix A, Matrix b, int num_decimal, FILE *fp) {
     fprintf(fp, "Ta co ma tran bo sung: \nM = (A | b) = \n");
     printMatrix2(M, num_decimal, fp);
     for (int i = 0; i < r - 1; i++) {
-        int check = 0;
-        for (int j = i; j < r; j++) {
-            if (M.data[j][i] != 0) {
-                check = 1;
-                if (j != i) {
-                    printf("(H%d <-> H%d)  ", i + 1, j + 1);
-                    fprintf(fp, "(H%d <-> H%d)  ", i + 1, j + 1);
-                    for (int k = 0; k <= c; k++) {
-                        swap(&M.data[i][k], &M.data[j][k]);
-                    }
-                    printf("\n\t===>\t\n");
-                    fprintf(fp, "\n\t===>\t\n");
-                    printMatrix2(M, num_decimal, fp);
-                }
-                break;
+        int tmp = i;
+        for(int j = i; j < r; j++){
+            if( abs(M.data[j][i]) > abs(M.data[tmp][i]) ){
+                tmp = j;
             }
         }
-        if (!check) {
-            continue;
+        if( M.data[tmp][i] == 0 ){
+            printf("He phuong trinh khong co nghiem duy nhat do r(A) < %d.\n",c);
+            fprintf(fp, "He phuong trinh khong co nghiem duy nhat do r(A) < %d.\n",c);
+            return;
+        }else{
+            printf("(H%d <-> H%d)  ", i + 1, tmp + 1);
+            fprintf(fp, "(H%d <-> H%d)  ", i + 1, tmp + 1);
+            for (int k = i; k <= c; k++) {
+                swap(&M.data[i][k], &M.data[tmp][k]);
+            }
+            printf("\n\t===>\t\n");
+            fprintf(fp, "\n\t===>\t\n");
+            printMatrix2(M, num_decimal, fp);
+            if( M.data[i][i] != 1 ){
+                double t = M.data[i][i];
+                printf("(H%d <-> (1/%.*f)*H%d)  ", i + 1, num_decimal, t, i + 1);
+                fprintf(fp, "(H%d <-> (1/%.*f)*H%d)  ", i + 1, num_decimal, t, i + 1);
+                for (int k = 0; k <= c; k++) {
+                    M.data[i][k] /= t;
+                }
+                printf("\n\t===>\t\n");
+                fprintf(fp, "\n\t===>\t\n");
+                printMatrix2(M, num_decimal, fp);
+            }
         }
         int kt = 0;
         for (int j = i + 1; j < r; j++) {
@@ -279,20 +300,16 @@ void giaiHePhuongTrinhBangGauss(Matrix A, Matrix b, int num_decimal, FILE *fp) {
         printf("\t");
         fprintf(fp, "\t");
         for (int j = 0; j < i; j++) {
-            for(int k = 0; k < 2*INT_PART+7+num_decimal; k++)
+            for(int k = 0; k < 2*INT_PART+7+num_decimal; k++){
                 printf(" ");
                 fprintf(fp, " ");
+            }
         }
         printf("%*.*f*x[%*d]", num_decimal + INT_PART, num_decimal, M.data[i][i] + 0.0, INT_PART, i + 1);
         fprintf(fp, "%*.*f*x[%*d]", num_decimal + INT_PART, num_decimal, M.data[i][i] + 0.0, INT_PART, i + 1);
         for (int j = i + 1; j < M.col - 1; j++) {
-            if (M.data[i][j] != 0) {
                 printf(" + %*.*f*x[%*d]", num_decimal + INT_PART, num_decimal, M.data[i][j] + 0.0, INT_PART, j + 1);
                 fprintf(fp, " + %*.*f*x[%*d]", num_decimal + INT_PART, num_decimal, M.data[i][j] + 0.0, INT_PART, j + 1);
-            } else {
-                printf("\t");
-                fprintf(fp, "\t");
-            }
         }
         printf(" = %*.*f\n", num_decimal + INT_PART, num_decimal, M.data[i][M.col - 1] + 0.0);
         fprintf(fp, " = %*.*f\n", num_decimal + INT_PART, num_decimal, M.data[i][M.col - 1] + 0.0);
@@ -375,36 +392,40 @@ void giaiHePhuongTrinhBangGaussJoocdan(Matrix A, Matrix b, int num_decimal, FILE
     printMatrix2(M, num_decimal, fp);
     // Truoc het dua ma tran M ve dang bac thang
     for (int i = 0; i < r; i++) {
-        int check = 0;
-        for (int j = i; j < r; j++) {
-            if (M.data[j][i] != 0) {
-                check = 1;
-                if (j != i) {
-                    printf("(H%d <-> H%d)  ", i + 1, j + 1);
-                    fprintf(fp, "(H%d <-> H%d)  ", i + 1, j + 1);
-                    for (int k = 0; k <= c; k++) {
-                        swap(&M.data[i][k], &M.data[j][k]);
-                    }
-                    printf("\n\t===>\t\n");
-                    fprintf(fp, "\n\t===>\t\n");
-                    printMatrix2(M, num_decimal, fp);
-                }
-                break;
+        int tmp = i;
+        for(int j = i; j < r; j++){
+            if( abs(M.data[j][i]) > abs(M.data[tmp][i]) ){
+                tmp = j;
             }
         }
-        if (!check) {
-            continue;
+        if( M.data[tmp][i] == 0 ){
+            printf("He phuong trinh khong co nghiem duy nhat.\n");
+            fprintf(fp, "He phuong trinh khong co nghiem duy nhat.\n");
+            return;
+        }else{
+            if(tmp != i ){
+                printf("(H%d <-> H%d)  ", i + 1, tmp + 1);
+                fprintf(fp, "(H%d <-> H%d)  ", i + 1, tmp + 1);
+                for (int k = i; k <= c; k++) {
+                    swap(&M.data[i][k], &M.data[tmp][k]);
+                }
+                printf("\n\t===>\t\n");
+                fprintf(fp, "\n\t===>\t\n");
+                printMatrix2(M, num_decimal, fp);
+            }
+            if( M.data[i][i] != 1 ){
+                double t = M.data[i][i];
+                printf("(H%d <-> (1/%.*f)*H%d)  ", i + 1, num_decimal, t, i + 1);
+                fprintf(fp, "(H%d <-> (1/%.*f)*H%d)  ", i + 1, num_decimal, t, i + 1);
+                for (int k = 0; k <= c; k++) {
+                    M.data[i][k] /= t;
+                }
+                printf("\n\t===>\t\n");
+                fprintf(fp, "\n\t===>\t\n");
+                printMatrix2(M, num_decimal, fp);
+            }
         }
         int kt = 0;
-        if (M.data[i][i] != 1) {
-            kt = 1;
-            double t = M.data[i][i];
-            printf("(H%d <-> (1/%.*f)*H%d)  ", i + 1, num_decimal, t, i + 1);
-            fprintf(fp, "(H%d <-> (1/%.*f)*H%d)  ", i + 1, num_decimal, t, i + 1);
-            for (int k = 0; k <= c; k++) {
-                M.data[i][k] /= t;
-            }
-        }
         for (int j = i + 1; j < r; j++) {
             if (M.data[j][i] != 0) {
                 kt = 1;
@@ -493,23 +514,23 @@ int check_symmetric(Matrix A, FILE *fp) {
     }
 }
 
-// Giai he phuong trinh bang phuong phap Choleski
-void giaiHePhuongTrinhBangCholeski(Matrix A, Matrix b, int num_decimal, FILE *fp) {
+// Giai he phuong trinh bang phuong phap Solepski
+void giaiHePhuongTrinhBangSolepski(Matrix A, Matrix b, int num_decimal, FILE *fp) {
     // A = L.L^T
     // L.L^T.x = b
     // Giai he phuong trinh
     // L^t.x = y
     // L.y = b
     printf("+-----------------------------------------------------+\n");
-    printf("| GIAI HE PHUONG TRINH BANG PHUONG PHAP Choleski      |\n");
+    printf("| GIAI HE PHUONG TRINH BANG PHUONG PHAP SOLEPSKI      |\n");
     printf("+-----------------------------------------------------+\n\n");
-    printf("De A co khai trien Choleski: A = L.L^T, voi T la ma tran tam giac duoi thi A phai la ma tran duong-doi xung.\n");
+    printf("De A co khai trien Solepski: A = L.L^T, voi L la ma tran tam giac duoi thi A phai la ma tran duong-doi xung.\n");
     fprintf(fp, "+-----------------------------------------------------+\n");
-    fprintf(fp, "| GIAI HE PHUONG TRINH BANG PHUONG PHAP Choleski      |\n");
+    fprintf(fp, "| GIAI HE PHUONG TRINH BANG PHUONG PHAP SOLEPSKI      |\n");
     fprintf(fp, "+-----------------------------------------------------+\n\n");
-    fprintf(fp, "De A co khai trien Choleski: A = L.L^T, voi T la ma tran tam giac duoi thi A phai la ma tran duong-doi xung.\n");
+    fprintf(fp, "De A co khai trien Solepski: A = L.L^T, voi L la ma tran tam giac duoi thi A phai la ma tran duong-doi xung.\n");
 
-    // Truoc het de dua A ve dang khai tren Choleski
+    // Truoc het de dua A ve dang khai tren Solepski
     // Ta kiem tra A co phai la ma tran duong-doi xung hay khong.
     // Dong thoi tim ma tran tam giac duoi L trong khai trien (neu co)
 
@@ -563,18 +584,14 @@ void giaiHePhuongTrinhBangCholeski(Matrix A, Matrix b, int num_decimal, FILE *fp
             upper_triangular.data[i][j] = lower_triangular.data[j][i];
         }
     }
-    printf("Ta co khai trien Choleski cua A: A = L.L^T = \n");
-    fprintf(fp, "Ta co khai trien Choleski cua A: A = L.L^T = \n");
+    printf("Ta co khai trien Solepski cua A: A = L.L^T = \n");
+    fprintf(fp, "Ta co khai trien Solepski cua A: A = L.L^T = \n");
     printMatrix(lower_triangular, num_decimal, fp);
     printf("\t\t*\n");
     printMatrix(upper_triangular, num_decimal, fp);
 
     // Giai lan luot hai phuong trinh tam giac duoi: Ly = b va tam giac tren L^t.x = y
     // Va dua ra nghiem cua he phuong trinh
-
-    printf("Nghiem cua he phuong trinh L.y = b la: \n");
-    fprintf(fp, "Nghiem cua he phuong trinh L.y = b la: \n");
-    // Giai he phuong trinh tam giac duoi
     double *y = (double *)malloc(sizeof(double) * c);
 
     y[0] = b.data[0][0] / lower_triangular.data[0][0];
@@ -583,11 +600,60 @@ void giaiHePhuongTrinhBangCholeski(Matrix A, Matrix b, int num_decimal, FILE *fp
         for (int j = 0; j < i; j++) {
             sum += lower_triangular.data[i][j] * y[j];
         }
+        if( lower_triangular.data[i][i] == 0 ){
+            printf("\tHe phuong trinh khong co nghiem duy nhat do r(L) < %d => det(L) = 0 => det(A) = 0\n", r);
+            fprintf(fp, "\tHe phuong trinh khong co nghiem duy nhat do r(L) < %d => det(L) = 0 => det(A) = 0\n", r);
+            return;
+        }
         y[i] = (b.data[i][0] - sum) / lower_triangular.data[i][i];
     }
+    printf("Ta thuc hien giai he phuong trinh: L.y = b:\n");
+    fprintf(fp, "Ta thuc hien giai he phuong trinh: L.y = b:\n");
+    for (int i = 0; i < r; i++) {
+        printf("\t");
+        fprintf(fp, "\t");
+        for (int j = 0; j < c-i; j++) {
+            for(int k = 0; k < 2*INT_PART+7+num_decimal; k++){
+                printf(" ");
+                fprintf(fp, " ");
+            }
+        }
+        printf("%*.*f*x[%*d]", num_decimal + INT_PART, num_decimal, lower_triangular.data[i][i] + 0.0, INT_PART, i + 1);
+        fprintf(fp, "%*.*f*x[%*d]", num_decimal + INT_PART, num_decimal, lower_triangular.data[i][i] + 0.0, INT_PART, i + 1);
+        for (int j = i + 1; j < A.col; j++) {
+                printf(" + %*.*f*x[%*d]", num_decimal + INT_PART, num_decimal, lower_triangular.data[i][j] + 0.0, INT_PART, j + 1);
+                fprintf(fp, " + %*.*f*x[%*d]", num_decimal + INT_PART, num_decimal, lower_triangular.data[i][j] + 0.0, INT_PART, j + 1);
+        }
+        printf(" = %*.*f\n", num_decimal + INT_PART, num_decimal, b.data[i][0]+ 0.0);
+        fprintf(fp, " = %*.*f\n", num_decimal + INT_PART, num_decimal, b.data[i][0] + 0.0);
+    }
+    printf("Nghiem cua he phuong trinh L.y = b la: \n");
+    fprintf(fp, "Nghiem cua he phuong trinh L.y = b la: \n");
+    // Giai he phuong trinh tam giac duoi
+    
     for (int i = 0; i < c; i++) {
         printf("\t\ty[%d] = %*.*f\n", i + 1, num_decimal + INT_PART, num_decimal, y[i] + 0.0);
         fprintf(fp, "\t\ty[%d] = %*.*f\n", i + 1, num_decimal + INT_PART, num_decimal, y[i] + 0.0);
+    }
+    printf("Ta thuc hien giai he phuong trinh: L^T.x = y:\n");
+    fprintf(fp, "Ta thuc hien giai he phuong trinh: L^T.x = y:\n");
+    for (int i = 0; i < r; i++) {
+        printf("\t");
+        fprintf(fp, "\t");
+        for (int j = 0; j < i; j++) {
+            for(int k = 0; k < 2*INT_PART+7+num_decimal; k++){
+                printf(" ");
+                fprintf(fp, " ");
+            }
+        }
+        printf("%*.*f*x[%*d]", num_decimal + INT_PART, num_decimal, upper_triangular.data[i][i] + 0.0, INT_PART, i + 1);
+        fprintf(fp, "%*.*f*x[%*d]", num_decimal + INT_PART, num_decimal, upper_triangular.data[i][i] + 0.0, INT_PART, i + 1);
+        for (int j = i + 1; j < c; j++) {
+                printf(" + %*.*f*x[%*d]", num_decimal + INT_PART, num_decimal, upper_triangular.data[i][j] + 0.0, INT_PART, j + 1);
+                fprintf(fp, " + %*.*f*x[%*d]", num_decimal + INT_PART, num_decimal, upper_triangular.data[i][j] + 0.0, INT_PART, j + 1);
+        }
+        printf(" = %*.*f\n", num_decimal + INT_PART, num_decimal, y[i] + 0.0);
+        fprintf(fp, " = %*.*f\n", num_decimal + INT_PART, num_decimal, y[i] + 0.0);
     }
     printf("\nNghiem cua he phuong trinh L^T.x = y la: \n");
     fprintf(fp, "\nNghiem cua he phuong trinh L^T.x = y la: \n");
@@ -612,10 +678,10 @@ int main() {
     FILE *fp;
     fp = fopen("output.txt", "w");
     printf("+------------------------------------------------------------------------------------------------------------+\n");
-    printf("| CHUONG TRINH GIAI HE PHUONG TRINH DAI SO TUYEN TINH Ax = B bang phuong phap Gauss, Gauss-Joocdan, Choleski |\n");
+    printf("| CHUONG TRINH GIAI HE PHUONG TRINH DAI SO TUYEN TINH Ax = B bang phuong phap Gauss, Gauss-Joocdan, Solepski |\n");
     printf("+------------------------------------------------------------------------------------------------------------+\n\n");
     fprintf(fp, "+------------------------------------------------------------------------------------------------------------+\n");
-    fprintf(fp, "| CHUONG TRINH GIAI HE PHUONG TRINH DAI SO TUYEN TINH Ax = B bang phuong phap Gauss, Gauss-Joocdan, Choleski |\n");
+    fprintf(fp, "| CHUONG TRINH GIAI HE PHUONG TRINH DAI SO TUYEN TINH Ax = B bang phuong phap Gauss, Gauss-Joocdan, Solepski |\n");
     fprintf(fp, "+------------------------------------------------------------------------------------------------------------+\n\n");
 
     printf("+-------------------------------------------+\n");
@@ -681,6 +747,7 @@ int main() {
             scanf("%lf", &b.data[i][0]);
         }
         printf("Vector cot b kich co %dx%d la: \n", b.row, b.col);
+        fprintf(fp, "Vector cot b kich co %dx%d la: \n", b.row, b.col);
         printMatrix(b, num_decimal, fp);
     }
 
@@ -718,7 +785,7 @@ int main() {
         printf("+------------------------------------------------------------+\n");
         printf("| 3. Giai phuong trinh Ax = b bang phuong phap Gauss-Joocdan |\n");
         printf("+------------------------------------------------------------+\n");
-        printf("| 4. Giai phuong trinh Ax = b bang phuong phap Choleski      |\n");
+        printf("| 4. Giai phuong trinh Ax = b bang phuong phap Solepski      |\n");
         printf("+------------------------------------------------------------+\n\n");
         fprintf(fp,"+------------------------------------------------------------+\n");
         fprintf(fp, "| Xin moi lua chon chuong trinh                              |\n");
@@ -729,7 +796,7 @@ int main() {
         fprintf(fp,"+------------------------------------------------------------+\n");
         fprintf(fp,"| 3. Giai phuong trinh Ax = b bang phuong phap Gauss-Joocdan |\n");
         fprintf(fp,"+------------------------------------------------------------+\n");
-        fprintf(fp,"| 4. Giai phuong trinh Ax = b bang phuong phap Choleski      |\n");
+        fprintf(fp,"| 4. Giai phuong trinh Ax = b bang phuong phap Solepski      |\n");
         fprintf(fp,"+------------------------------------------------------------+\n\n");
         printf("Nhap lua chon: ");
         scanf("%d", &choice);
@@ -748,7 +815,7 @@ int main() {
                 giaiHePhuongTrinhBangGaussJoocdan(A, b, num_decimal, fp);
                 break;
             case 4:
-                giaiHePhuongTrinhBangCholeski(A, b, num_decimal, fp);
+                giaiHePhuongTrinhBangSolepski(A, b, num_decimal, fp);
                 break;
         }
         printf("Ban co muon tiep tuc khong? (y/n): ");
